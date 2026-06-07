@@ -1,0 +1,44 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+build/
+.next/
+out/
+.expo/
+.turbo/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# database (local dev)
+*.db
+*.db-journal
+dev.db*
+prisma/dev.db*
+
+# local data adapter
+.data/
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# test / coverage
+coverage/
+*.tsbuildinfo
+
+# prisma generated client (regenerated on install)
+packages/**/generated/
+apps/**/generated/
