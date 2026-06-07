@@ -1,0 +1,113 @@
+// Cancel & Claim AI data model.
+//
+// The `provider` line is managed by scripts/set-prisma-provider.mjs so the same
+// schema runs on SQLite (local dev) and PostgreSQL (production). To stay portable
+// across both engines we avoid native enums, Json columns, and scalar arrays:
+// enum-like values are stored as strings, and structured data (intake answers,
+// generated output) is stored as JSON-encoded strings handled at the repository
+// boundary.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// An optional account. v1 uses anonymous signed-cookie sessions; a captured
+/// email upgrades a session to a durable account for receipts and data control.
+model AppUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+/// The central aggregate. `ownerId` is the session subject (or user id) so a
+/// person can return to their cases. Intake/facts/output are JSON strings.
+model Case {
+  id         String     @id @default(cuid())
+  ownerId    String
+  userId     String?
+  type       String
+  status     String     @default("open") // open | generated | archived
+  locale     String     @default("en")
+  title      String
+  intakeJson String     @default("{}")
+  factsJson  String     @default("[]")
+  outputJson String? // serialized CaseOutput once generated
+  unlocked   Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  evidence   Evidence[]
+  reminders  Reminder[]
+
+  @@index([ownerId])
+  @@index([ownerId, status])
+}
+
+/// Uploaded files or typed notes attached to a case. Binaries live in object
+/// storage (storageKey); only extracted text is kept for the AI layer.
+model Evidence {
+  id          String   @id @default(cuid())
+  caseId      String
+  case        Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  kind        String // file | note
+  name        String
+  mime        String?
+  size        Int?
+  textContent String?
+  storageKey  String?
+  createdAt   DateTime @default(now())
+
+  @@index([caseId])
+}
+
+/// A scheduled follow-up step (the reminder schedule for a case).
+model Reminder {
+  id         String    @id @default(cuid())
+  caseId     String
+  case       Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  offsetDays Int
+  channel    String
+  label      String
+  message    String
+  dueDate    DateTime?
+  done       Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  @@index([caseId])
+}
+
+/// Payment / entitlement record. `status` gates the full case pack.
+model Payment {
+  id          String   @id @default(cuid())
+  ownerId     String
+  caseId      String?
+  plan        String // single | bundle | pro
+  amount      Int // minor units (cents)
+  currency    String   @default("usd")
+  status      String   @default("pending") // pending | paid | refunded
+  provider    String   @default("stripe")
+  providerRef String?
+  createdAt   DateTime @default(now())
+
+  @@index([ownerId])
+  @@index([providerRef])
+}
+
+/// Append-only audit trail for sensitive actions (generation, export, delete).
+/// `meta` is a redacted JSON string — never store raw PII here.
+model AuditLog {
+  id         String   @id @default(cuid())
+  ownerId    String?
+  action     String
+  targetType String?
+  targetId   String?
+  meta       String?
+  createdAt  DateTime @default(now())
+
+  @@index([ownerId])
+  @@index([action])
+}
