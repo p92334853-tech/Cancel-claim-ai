@@ -42,3 +42,6 @@ coverage/
 # prisma generated client (regenerated on install)
 packages/**/generated/
 apps/**/generated/
+
+# next generated
+next-env.d.ts
