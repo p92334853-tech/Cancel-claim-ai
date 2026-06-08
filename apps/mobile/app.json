@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "Cancel & Claim AI",
+    "slug": "cancel-claim-ai",
+    "scheme": "cancelclaim",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0E2236"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ai.cancelclaim.app"
+    },
+    "android": {
+      "package": "ai.cancelclaim.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0E2236"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
